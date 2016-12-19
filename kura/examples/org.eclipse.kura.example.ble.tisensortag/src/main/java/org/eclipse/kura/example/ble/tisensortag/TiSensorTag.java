@@ -280,7 +280,7 @@ public class TiSensorTag implements BluetoothLeNotificationListener {
 
             double Tdie = ambT / 128.0 + 273.15;
 
-            double S0 = 5.593E-14;	// Calibration factor
+            double S0 = 5.593E-14;     // Calibration factor
             double a1 = 1.75E-3;
             double a2 = -1.678E-5;
             double b0 = -2.94E-5;
@@ -776,31 +776,31 @@ public class TiSensorTag implements BluetoothLeNotificationListener {
     /*
      * Read pressure sensor
      */
-    public double readPressure() {
-        double pressure = 0.0;
+    public double[] readPressureTemp() {
+        double[] metris = new double[2];
         // Read value
         try {
             if (this.CC2650) {
-                pressure = calculatePressure(
+                metris = calculatePressure(
                         this.m_bluetoothGatt.readCharacteristicValue(TiSensorTagGatt.HANDLE_PRE_SENSOR_VALUE_2650));
             } else if (this.firmwareRevision.contains("1.4")) {
-                pressure = calculatePressure(
+                metris = calculatePressure(
                         this.m_bluetoothGatt.readCharacteristicValue(TiSensorTagGatt.HANDLE_PRE_SENSOR_VALUE_2541_1_4));
             } else {
-                pressure = calculatePressure(
+                metris = calculatePressure(
                         this.m_bluetoothGatt.readCharacteristicValue(TiSensorTagGatt.HANDLE_PRE_SENSOR_VALUE_2541_1_5));
             }
         } catch (KuraException e) {
             s_logger.error(e.toString());
         }
-        return pressure;
+        return metris;
     }
 
     /*
      * Read pressure sensor by UUID
      */
-    public double readPressureByUuid() {
-        double pressure = 0.0;
+    public double[] readPressureByUuid() {
+        double[] pressure = new double[2];
         try {
             pressure = calculatePressure(
                     this.m_bluetoothGatt.readCharacteristicValueByUuid(TiSensorTagGatt.UUID_PRE_SENSOR_VALUE));
@@ -852,18 +852,21 @@ public class TiSensorTag implements BluetoothLeNotificationListener {
     /*
      * Calculate pressure
      */
-    private double calculatePressure(String value) {
+    private double[] calculatePressure(String value) {
 
         s_logger.info("Received pressure value: " + value);
 
+        double t_a = 0.0;
         double p_a = 0.0;
         byte[] valueByte = hexStringToByteArray(value.replace(" ", ""));
 
         if (this.CC2650) {
 
             if (valueByte.length > 4) {
-                Integer val = twentyFourBitUnsignedAtOffset(valueByte, 3);
-                p_a = val / 100.0;
+                Integer tempVal = twentyFourBitUnsignedAtOffset(valueByte, 0);
+                t_a = tempVal / 100.0;
+                Integer pressVal = twentyFourBitUnsignedAtOffset(valueByte, 3);
+                p_a = pressVal / 100.0;
             } else {
                 int mantissa;
                 int exponent;
@@ -903,7 +906,7 @@ public class TiSensorTag implements BluetoothLeNotificationListener {
 
         }
 
-        return p_a;
+        return new double[]{t_a, p_a};
     }
 
     // --------------------------------------------------------------------------------------------------------

@@ -588,11 +588,13 @@ public class BluetoothLe implements ConfigurableComponent, CloudClientListener, 
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    double pressure = myTiSensorTag.readPressure();
+                    double[] pressureTemp = myTiSensorTag.readPressureTemp();
 
-                    s_logger.info("Pre : " + pressure);
+                    s_logger.info("Temp : " + pressureTemp[0]);
+                    s_logger.info("Pre : " + pressureTemp[1]);
 
-                    payload.addMetric("Pressure", pressure);
+                    payload.addMetric("Temp", pressureTemp[0]);
+                    payload.addMetric("Pressure", pressureTemp[1]);
                 }
 
                 if (this.enableGyro) {
